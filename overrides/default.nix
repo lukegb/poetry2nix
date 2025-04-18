@@ -356,6 +356,7 @@ lib.composeManyExtensions [
       bcrypt =
         let
           getCargoHash = version: {
+            "4.2.0" = "sha256-TD1Qacr2BS3CutGzDcUSweTrlMuKy0U/eIS/oBLxTlI=";
           }.${version} or (
             lib.warn "Unknown bcrypt version: '${version}'. Please update getCargoHash." lib.fakeHash
           );
@@ -376,7 +377,7 @@ lib.composeManyExtensions [
                   inherit (old) src;
                   sourceRoot = "${old.pname}-${old.version}/src/_bcrypt";
                   name = "${old.pname}-${old.version}";
-                  sha256 = getCargoHash old.version;
+                  hash = getCargoHash old.version;
                 };
             cargoRoot = "src/_bcrypt";
           }
@@ -578,10 +579,12 @@ lib.composeManyExtensions [
       cryptography =
         let
           getCargoHash = version: {
+            "43.0.3" = "sha256-e6V8QJAiP1EJAJxU+KchJBIyz5wUTxxK5NtXqmlVHII=";
+            "44.0.1" = "sha256-hjfSjmwd/mylVZKyXsj/pP2KvAGDpfthuT+w219HAiA=";
           }.${version} or (
             lib.warn "Unknown cryptography version: '${version}'. Please update getCargoHash." lib.fakeHash
           );
-          sha256 = getCargoHash prev.cryptography.version;
+          hash = getCargoHash prev.cryptography.version;
           isWheel = lib.hasSuffix ".whl" prev.cryptography.src;
           scrypto =
             if isWheel then
@@ -612,7 +615,7 @@ lib.composeManyExtensions [
                   inherit (old) src;
                   sourceRoot = "${old.pname}-${old.version}/${cargoRoot}";
                   name = "${old.pname}-${old.version}";
-                  inherit sha256;
+                  inherit hash;
                 };
               cargoRoot = if lib.versionAtLeast old.version "44" then "." else "src/rust";
             }
@@ -2030,6 +2033,7 @@ lib.composeManyExtensions [
             };
 
             cargoHash = {
+              "3.10.6" = "sha256-FONzOuF+FU4gKesnqyVOwy0Z9abIF2kv/GHM+pwaCJs=";
             }.${old.version};
 
           in
@@ -2038,7 +2042,7 @@ lib.composeManyExtensions [
             cargoDeps = pkgs.rustPlatform.fetchCargoVendor {
               inherit src;
               name = "${old.pname}-${old.version}";
-              sha256 = cargoHash;
+              hash = cargoHash;
             };
             nativeBuildInputs = old.nativeBuildInputs or [ ] ++ [
               pkgs.rustPlatform.cargoSetupHook # handles `importCargoLock`
@@ -2168,7 +2172,8 @@ lib.composeManyExtensions [
       pillow = prev.pillow.overridePythonAttrs (
         old:
         let
-          preConfigure = (old.preConfigure or "") + pkgs.python3.pkgs.pillow.preConfigure;
+          preConfigure' = (old.preConfigure or "") + pkgs.python3.pkgs.pillow.preConfigure;
+          preConfigure = lib.strings.replaceStrings [ "--replace-fail" ] [ "--replace-warn" ] preConfigure';
         in
         {
           nativeBuildInputs = old.nativeBuildInputs or [ ]
@@ -2268,7 +2273,7 @@ lib.composeManyExtensions [
 
       psycopg-c = prev.psycopg-c.overridePythonAttrs (
         old: {
-          nativeBuildInputs = old.nativeBuildInputs or [ ] ++ [ pkgs.postgresql ];
+          nativeBuildInputs = old.nativeBuildInputs or [ ] ++ [ pkgs.postgresql pkgs.postgresql.pg_config ];
         }
       );
 
@@ -2276,7 +2281,7 @@ lib.composeManyExtensions [
         old: {
           buildInputs = old.buildInputs or [ ]
             ++ lib.optionals stdenv.isDarwin [ pkgs.openssl ];
-          nativeBuildInputs = old.nativeBuildInputs or [ ] ++ [ pkgs.postgresql ];
+          nativeBuildInputs = old.nativeBuildInputs or [ ] ++ [ pkgs.postgresql pkgs.postgresql.pg_config ];
         }
       );
 
@@ -3229,6 +3234,8 @@ lib.composeManyExtensions [
       rpds-py =
         let
           getCargoHash = version: {
+            "0.19.1" = "sha256-vfx0ZbIgH5UvL1JMYeJIToY35w2axiHngBt5FJUih7c=";
+            "0.21.0" = "sha256-TYO5p/9v/eMTHxAsRdZvYoVB/W1yvtUVPi205F3WlOo=";
           }.${version} or (
             lib.warn "Unknown rpds-py version: '${version}'. Please update getCargoHash." lib.fakeHash
           );
